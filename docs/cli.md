@@ -1,5 +1,9 @@
 # Command-line reference
 
+For authenticated dashboard startup use `qbench-admin init --database FILE
+--username NAME`, then `qbench-dashboard --database FILE`. Passwords are prompted
+privately. See [platform administration](platform.md) for feature access and recovery.
+
 All provider commands accept a trusted `package.module:object`, either as the
 positional argument or with `--provider`. Use `--help` on the installed command
 for the complete, version-specific option list.

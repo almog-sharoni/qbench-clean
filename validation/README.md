@@ -1,6 +1,7 @@
 # Validation records
 
-`summary.json` records the final validation gates and deliberately unverified
+`platform.json` records the subsequent multi-user platform source, installed-wheel,
+GPU and real-browser checks. `summary.json` records the extraction validation gates and deliberately unverified
 acceptance criteria. `extraction-comparison.json` compares the original workspace
 and this standalone runtime on six deterministic random-weight model/shape cases.
 

@@ -63,5 +63,9 @@ The clean distribution includes the Python API, CLI, simulator implementations,
 standalone Streamlit workbench, tests, and this documentation. Experiments,
 databases, model weights, datasets, and container filesystems are excluded.
 
+The [multi-user platform](platform.md) adds admin-created accounts, feature access,
+private session workspaces, and administrative usage metrics. Its private runtime
+SQLite database is created locally and is never bundled with the repository.
+
 Read the [validation record](validation.md) for tested behavior and open acceptance
 gates. Existing research scripts remain in the original repository.

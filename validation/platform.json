@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-04",
+  "scope": "Authenticated single-host dashboard platform on the standalone QBench distribution",
+  "base_commit": "533985b",
+  "production_database_created": false,
+  "remote_deployment_performed": false,
+  "wheel": {
+    "filename": "qbench-0.1.0-py3-none-any.whl",
+    "sha256": "089ecfc19638f5b5816d49db602ec2a7b66890a3c96487f658702fa24ae591fd",
+    "installed_outside_checkout": true,
+    "api_cli_resource_smoke": "passed"
+  },
+  "suites": {
+    "cpu_source": {"passed": 310, "skipped": 8, "failed": 0, "seconds": 97.86},
+    "cpu_installed_wheel": {"passed": 310, "skipped": 8, "failed": 0, "seconds": 98.68},
+    "cuda_source": {"passed": 317, "skipped": 1, "failed": 0, "seconds": 90.05}
+  },
+  "environments": {
+    "cpu": {"python": "3.12", "torch": "2.14.0+cpu", "torchvision": "0.29.0+cpu", "timm": "1.0.29", "streamlit": "1.63.0"},
+    "cuda": {"python": "3.12.3", "torch": "2.9.0a0+50eac811a6.nv25.09", "torchvision": "0.24.0a0+98f8b375", "timm": "1.0.26", "streamlit": "1.55.0", "cuda": "13.0", "gpu": "NVIDIA H100 NVL"}
+  },
+  "real_browser": {
+    "status": "passed",
+    "engine": "Chromium",
+    "playwright": "1.62.0",
+    "installed_wheel": true,
+    "isolated_admin_and_user_contexts": true,
+    "checks": ["account creation", "mandatory password change", "inspection", "strict conversion", "paired evaluation", "artifact ZIP download", "account disable and session revocation", "denied subsequent login", "per-user admin metrics", "desktop and mobile layout"]
+  },
+  "other_gates": {
+    "ruff": "passed",
+    "mkdocs_strict": "passed",
+    "local_documentation_links_and_anchors": "passed",
+    "documentation_html_pages": 19,
+    "gpu_quantized_platform_workflow": "passed",
+    "approved_imagenet_folder_integration": "passed with a generated one-image fixture, not pretrained acceptance"
+  },
+  "limitations": [
+    "The GPU suite skips opt-in pretrained public-model ImageNet acceptance; CPU also skips seven GPU-only tests.",
+    "No independent hardware-fidelity evidence or representative target-GPU overhead certification was added.",
+    "This is one trusted host and one process, not a hostile-code sandbox or distributed scheduler.",
+    "Public deployment, HTTPS/proxy setup, load/penetration testing, SSO, MFA and email delivery were not performed.",
+    "Existing container and two installed environments were tested; a new container image and broad dependency-version matrix were not tested."
+  ]
+}

@@ -27,7 +27,8 @@ ModelProvider + named Scenarios
 | `evaluation.py` | Paired metrics and opt-in detailed diagnostics |
 | `artifacts.py`, `provenance.py` | Reproducible outputs and provenance |
 | `kernels.py`, `conformance_vectors/` | Portable simulator/evidence checks |
-| `dashboard/` | Standalone UI using the workbench compatibility API |
+| `dashboard/platform/` | Private accounts, authorization, usage metrics and public-API workbench |
+| `dashboard/workbench.py` | Explicit loopback-only legacy UI |
 
 The retained workbench module supports old recipe/report workflows; new programmatic
 integration should use the public API. Do not add simulator logic to the dashboard.
@@ -42,6 +43,24 @@ python -m build --wheel
 python -m pip install -r docs/requirements.txt
 mkdocs build --strict
 ```
+
+The platform tests cover persistent authentication throttling, session revocation,
+role/feature enforcement, cross-session workspace isolation, concurrent account
+edits, approved dataset evaluation, and Streamlit interactions. The GPU suite
+also exercises a quantization-enabled platform workflow.
+
+For a real Chromium check using a disposable private database and loopback server:
+
+```bash
+python -m pip install -e ".[dashboard,browser-test]"
+python -m playwright install --with-deps chromium
+python scripts/smoke_platform_browser.py
+```
+
+This creates test accounts only in a temporary directory and writes screenshots,
+an artifact ZIP, and a result summary under `artifacts/platform-browser/`. It checks
+admin account creation, first-login password change, model actions, downloads,
+revocation, and admin usage metrics in isolated browser contexts. CI runs it too.
 
 CPU CI runs the full portable suite; GPU-only tests skip explicitly. GPU conformance
 and pretrained ImageNet acceptance require a compatible machine and data. A passing

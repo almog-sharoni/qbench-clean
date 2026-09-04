@@ -11,6 +11,34 @@ The skipped test is the opt-in pretrained public-model ImageNet acceptance run.
 The original checkout contained uncommitted implementation work; its parent commit
 was `08b42206f899c8e4e1e5091b332118f7f0ccb21d`.
 
+## Multi-user platform validation
+
+After the standalone extraction commit `533985b`, the authenticated platform added
+55 regression cases. Final results on September 4, 2026:
+
+| Gate | Result |
+| --- | --- |
+| Full stock-CPU source suite | 310 passed, 8 explicit skips |
+| Full installed-wheel stock-CPU suite, outside checkout | 310 passed, 8 explicit skips |
+| Full CUDA source suite | 317 passed, 1 opt-in acceptance skip |
+| Installed-wheel Chromium workflow | Passed with isolated administrator/user contexts |
+| Package/API/CLI resources and exit codes | Passed outside checkout |
+| Python lint, strict documentation build and local links | Passed |
+
+The browser check creates an account through the admin panel, changes its temporary
+password, inspects/builds/evaluates a model, downloads artifacts, then disables the
+account and confirms access is revoked. Admin usage metrics and desktop/mobile
+layouts are checked. A real-browser regression found and fixed a stale user selector
+after account creation. Store/service/UI tests also cover concurrent throttle and
+last-admin protection, permission edits, ownership, recovery, safe error messages,
+and approved dataset evaluation. The GPU suite includes actual quantized platform
+execution; the dataset test uses a generated image fixture, not pretrained accuracy.
+
+Machine-readable evidence is in `validation/platform.json`. The extraction records
+below remain historical evidence. No production accounts were created and no public
+deployment, penetration/load testing, SSO or MFA certification was performed. See
+the [platform deployment limits](platform.md#remote-deployment-checklist).
+
 ## Extraction-specific regressions
 
 The initial standalone suite exposed a label-resource path pointing at the old

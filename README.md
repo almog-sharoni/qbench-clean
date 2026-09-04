@@ -13,7 +13,8 @@ python -m venv .venv
 source .venv/bin/activate
 python -m pip install -e ".[dashboard,conformance,test]"
 qbench inspect qbench.examples:tiny_provider --output-dir artifacts/tiny
-qbench-dashboard
+qbench-admin init --database .qbench/platform.sqlite3 --username owner
+qbench-dashboard --database .qbench/platform.sqlite3
 ```
 
 For CPU-only PyTorch, first install the appropriate CPU wheel following
@@ -44,6 +45,7 @@ hardware bit-exactness. Explicit FP32 fallback always remains partial.
 | `qbench/ops/` | Maintained simulator implementations |
 | `qbench/quantization/` | Runtime, lazy CUDA codecs, compatibility workbench APIs |
 | `qbench/dashboard/` | Standalone Streamlit model workbench |
+| `qbench/dashboard/platform/` | Accounts, admin panel, authorization and usage audit |
 | `qbench/conformance_vectors/` | Portable vectors and checksums |
 | `qbench/validation/` | Reproducible public-model acceptance harness |
 | `tests/` | Unit, integration, dashboard and optional GPU tests |
@@ -65,6 +67,9 @@ python -m qbench.validation.public_models --help
 
 Start with the [quickstart](docs/quickstart.md), [dashboard guide](docs/dashboard.md),
 [API reference](docs/api.md), and [validation record](docs/validation.md).
+The [multi-user platform guide](docs/platform.md) covers administration, per-user
+features, dataset allowlists, account recovery, and secure single-host deployment.
+For the legacy trusted local workbench, use `qbench-dashboard --single-user`.
 The Pages workflow builds this site and deploys it when Pages is configured for
 GitHub Actions. See [deployment](docs/deployment.md).
 

@@ -1,4 +1,4 @@
-# Standalone model workbench
+# Dashboard & model workbench
 
 The dashboard is a client of the QBench runtime and compatibility workbench API.
 It does not require the old experiment database, dashboard setup script, or any
@@ -8,14 +8,37 @@ other experiment tab.
 
 ```bash
 python -m pip install -e ".[dashboard]"
-qbench-dashboard --server.address 127.0.0.1 --server.port 8501
+qbench-admin init --database .qbench/platform.sqlite3 --username owner
+qbench-dashboard --database .qbench/platform.sqlite3 --host 127.0.0.1 --port 8501
 ```
 
-Open the local URL printed by Streamlit. Use a trusted local machine: this is a
-research workbench, not an authenticated multi-tenant service. Do not expose it
-to the public internet without an appropriate authentication/reverse-proxy layer.
+Open the local URL printed by Streamlit and sign in with your chosen credentials.
+The authenticated platform provides a guided inspect → convert → evaluate flow,
+an admin panel, per-user feature access, private session workspaces and usage
+metrics. Start with the download-free demo. Read the [platform guide](platform.md)
+for account management, dataset allowlists, recovery and HTTPS deployment.
 
-## Typical workflow
+## Shared workflow improvements
+
+Capture, routing, quantization and hardware evidence are displayed separately.
+Support gaps are searchable, scenario coverage is explicit, and changed model
+settings disable downstream actions until reinspection. Evaluation identifies
+synthetic data versus approved labeled datasets. Users can export a private ZIP
+if permitted and release their workspace to free server capacity.
+
+## Legacy local mode
+
+```bash
+qbench-dashboard --single-user
+```
+
+This explicitly disables authentication and preserves the earlier full workbench,
+including trusted Python factories, custom replacements and dataset path controls.
+The launcher refuses non-loopback binding in this mode. Do not expose it through
+a reverse proxy. Shared mode does not offer arbitrary-code or unrestricted-path
+controls; it uses vetted model sources and operator-approved datasets.
+
+## Legacy workbench workflow
 
 1. Select a torchvision or timm model, device, weights, and capture shape.
 2. Load and analyze the model. Expensive work is button-driven; model objects

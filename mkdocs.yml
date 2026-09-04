@@ -50,6 +50,7 @@ nav:
   - Get started:
       - Installation & first inspection: quickstart.md
       - Dashboard: dashboard.md
+      - Multi-user platform & administration: platform.md
       - CPU & GPU environments: environments.md
   - User guide:
       - Support verdicts & capture: support.md

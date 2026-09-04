@@ -66,8 +66,11 @@ From the repository root after installation:
 ```bash
 python examples/inspect_and_evaluate.py --output artifacts/example
 qbench evaluate qbench.examples:tiny_provider --output-dir artifacts/evaluation
-qbench-dashboard
+qbench-dashboard --single-user
 ```
 
 If a command exits with `2`, read its gaps: analysis may have succeeded with
 partial support. Exit `1` is a configuration or execution failure.
+
+The command above opens the trusted local legacy workbench on loopback only.
+For authenticated sharing, initialize accounts and use the [multi-user platform](platform.md).

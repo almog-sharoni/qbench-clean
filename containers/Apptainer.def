@@ -3,7 +3,7 @@ From: nvcr.io/nvidia/pytorch:25.09-py3
 
 %post
     python -m pip install --no-cache-dir ninja numpy pytest build \
-        'timm==1.0.26' 'streamlit==1.55.0' pandas
+        'timm==1.0.26' 'streamlit==1.55.0' pandas 'argon2-cffi>=23.1'
 
 %runscript
     exec python "$@"

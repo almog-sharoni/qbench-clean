@@ -9,7 +9,7 @@ history and physically owns its runtime under `qbench/`; it does not import from
 | `runspace.src.ops` / `src.ops` | `qbench.ops` |
 | `runspace.src.registry.op_registry` | `qbench.registry` |
 | `runspace.src.quantization.model_workbench` | `qbench.quantization.model_workbench` |
-| Shared dashboard workbench tab | `qbench-dashboard` |
+| Shared dashboard workbench tab | Authenticated `qbench-dashboard`; local legacy controls via `--single-user` |
 | `runspace.public_model_acceptance` | `qbench.validation.public_models` |
 
 Legacy workbench functions including `analyze_model`, planning, `convert_model`,
@@ -22,6 +22,13 @@ Historical `src.*` and `runspace.*` import aliases remain in the original
 repository, not in this clean package. Update application imports when moving.
 Serialized Python pickles tied to historical module names are not a portable
 migration format; rebuild models from trusted definitions and state dictionaries.
+
+The dashboard now defaults to authenticated multi-user mode. Initialize its private
+database with `qbench-admin init`, then pass `--database` to the launcher. Use
+`qbench-dashboard --single-user` only for the old trusted local workbench; it cannot
+bind beyond loopback. See [platform setup](platform.md) for account and feature
+administration. Shared mode deliberately excludes arbitrary Python providers and
+checkpoint uploads; those remain trusted programmatic/local workflows.
 
 ## Deliberately excluded
 

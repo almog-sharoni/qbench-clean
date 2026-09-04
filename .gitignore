@@ -12,3 +12,9 @@ artifacts/
 *.pt
 *.pth
 .DS_Store
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+*.db
+*.db-wal
+*.db-shm
