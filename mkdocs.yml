@@ -1,0 +1,69 @@
+site_name: QBench
+site_description: Runtime-first model inspection and verified quantized simulation for PyTorch
+strict: true
+theme:
+  name: material
+  font: false
+  language: en
+  icon:
+    logo: material/chip
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: teal
+      toggle:
+        icon: material/brightness-4
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: teal
+      toggle:
+        icon: material/brightness-7
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+plugins:
+  - search
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+extra_css:
+  - stylesheets/extra.css
+nav:
+  - Overview: index.md
+  - Get started:
+      - Installation & first inspection: quickstart.md
+      - Dashboard: dashboard.md
+      - CPU & GPU environments: environments.md
+  - User guide:
+      - Support verdicts & capture: support.md
+      - Providers & scenarios: providers.md
+      - Conversion & simulation: simulation.md
+      - Evaluation & metrics: evaluation.md
+      - Artifacts & privacy: artifacts.md
+  - Reference:
+      - Python API: api.md
+      - Command line: cli.md
+      - Kernels & conformance: kernels.md
+      - Migration: migration.md
+      - Troubleshooting: troubleshooting.md
+  - Development:
+      - Architecture & contributing: development.md
+      - Validation evidence: validation.md
+      - GitHub Pages deployment: deployment.md

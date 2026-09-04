@@ -1,0 +1,912 @@
+{
+  "corpus": "qbench-canonical-kernels",
+  "hardware_actual_results": false,
+  "hardware_evidence": null,
+  "quantization_policies": {
+    "fp8_e4m3_full_tensor": {
+      "act_chunk_size": 128,
+      "act_mode": "tensor",
+      "chunk_size": 128,
+      "input_quantization": true,
+      "layer_config": {},
+      "output_chunk_size": 128,
+      "output_mode": "tensor",
+      "output_quantization": true,
+      "quant_mode": "tensor",
+      "quantization_bias": null,
+      "quantization_type": "fp8_e4m3",
+      "quantize_first_layer": true,
+      "rounding": "nearest",
+      "weight_chunk_size": 128,
+      "weight_mode": "channel",
+      "weight_quantization": true
+    }
+  },
+  "schema_version": 2,
+  "vectors": [
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::linear"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "linear_basic.npz",
+      "kernel": "linear",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "linear",
+      "sha256": "d45399387110695a0185949fc0150c9dfac564d37096f5ed966170bd18ada60c"
+    },
+    {
+      "capability": {
+        "implementation": "qbench.ops.quant_linear.QuantLinear",
+        "kind": "module",
+        "target": "torch.nn.modules.linear.Linear"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "linear_module.npz",
+      "kernel": "linear",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "linear",
+      "sha256": "d45399387110695a0185949fc0150c9dfac564d37096f5ed966170bd18ada60c"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::addmm"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "addmm_basic.npz",
+      "kernel": "addmm",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "addmm",
+      "sha256": "d45399387110695a0185949fc0150c9dfac564d37096f5ed966170bd18ada60c"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::convolution"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "convolution_basic.npz",
+      "kernel": "convolution",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "convolution",
+      "sha256": "bf6aeae5b715f331fa68688ddeecf93078dad20c5bb8ea2aca004a059799deb4"
+    },
+    {
+      "capability": {
+        "implementation": "qbench.ops.quant_conv1d.QuantConv1d",
+        "kind": "module",
+        "target": "torch.nn.modules.conv.Conv1d"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "convolution_module_conv1d.npz",
+      "kernel": "convolution",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "convolution",
+      "sha256": "d4a3a3cced0dd29f6d51dfa22589855b1069064e1af9fb9e443d5ea0d84f5227"
+    },
+    {
+      "capability": {
+        "implementation": "qbench.ops.quant_conv.QuantConv2d",
+        "kind": "module",
+        "target": "torch.nn.modules.conv.Conv2d"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "convolution_module_conv2d.npz",
+      "kernel": "convolution",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "convolution",
+      "sha256": "bf6aeae5b715f331fa68688ddeecf93078dad20c5bb8ea2aca004a059799deb4"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::conv1d"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "conv1d_basic.npz",
+      "kernel": "conv1d",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "conv1d",
+      "sha256": "d4a3a3cced0dd29f6d51dfa22589855b1069064e1af9fb9e443d5ea0d84f5227"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::conv2d"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "conv2d_basic.npz",
+      "kernel": "conv2d",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "conv2d",
+      "sha256": "bf6aeae5b715f331fa68688ddeecf93078dad20c5bb8ea2aca004a059799deb4"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::layer_norm"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "normalization_layernorm.npz",
+      "kernel": "normalization",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "normalization",
+      "sha256": "32954cb1f61dc576da3db5a6d8c16c8b30f000f6f555676a120d8678f837d937"
+    },
+    {
+      "capability": {
+        "implementation": "qbench.ops.quant_ln.QuantLayerNorm",
+        "kind": "module",
+        "target": "torch.nn.modules.normalization.LayerNorm"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "normalization_module_layernorm.npz",
+      "kernel": "normalization",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "normalization",
+      "sha256": "32954cb1f61dc576da3db5a6d8c16c8b30f000f6f555676a120d8678f837d937"
+    },
+    {
+      "capability": {
+        "implementation": "qbench.ops.quant_bn.QuantBatchNorm1d",
+        "kind": "module",
+        "target": "torch.nn.modules.batchnorm.BatchNorm1d"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "normalization_module_batchnorm1d.npz",
+      "kernel": "normalization",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "normalization",
+      "sha256": "25dc0da70a0af7730a791566bc0b836c16fdbaf50db92a0a768d85a91fe50ac7"
+    },
+    {
+      "capability": {
+        "implementation": "qbench.ops.quant_bn.QuantBatchNorm2d",
+        "kind": "module",
+        "target": "torch.nn.modules.batchnorm.BatchNorm2d"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "normalization_module_batchnorm2d.npz",
+      "kernel": "normalization",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "normalization",
+      "sha256": "121142e94e8534b04f73f45049d2c211cb588dd941696dab44ba4e1783fb2973"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::batch_norm"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "batch_norm_inference.npz",
+      "kernel": "batch_norm",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "batch_norm",
+      "sha256": "121142e94e8534b04f73f45049d2c211cb588dd941696dab44ba4e1783fb2973"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::relu"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "activation_relu.npz",
+      "kernel": "activation",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "activation",
+      "sha256": "9ab4539143b36174cdd3e36e328e09364d2563138a3f3d3a19bdc43b0adc6f3b"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::relu6"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "activation_relu6.npz",
+      "kernel": "activation",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "activation",
+      "sha256": "9ab4539143b36174cdd3e36e328e09364d2563138a3f3d3a19bdc43b0adc6f3b"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::gelu"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "activation_gelu.npz",
+      "kernel": "activation",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "activation",
+      "sha256": "9ab4539143b36174cdd3e36e328e09364d2563138a3f3d3a19bdc43b0adc6f3b"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::silu"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "activation_silu.npz",
+      "kernel": "activation",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "activation",
+      "sha256": "9ab4539143b36174cdd3e36e328e09364d2563138a3f3d3a19bdc43b0adc6f3b"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::hardswish"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "activation_hardswish.npz",
+      "kernel": "activation",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "activation",
+      "sha256": "9ab4539143b36174cdd3e36e328e09364d2563138a3f3d3a19bdc43b0adc6f3b"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::hardsigmoid"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "activation_hardsigmoid.npz",
+      "kernel": "activation",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "activation",
+      "sha256": "9ab4539143b36174cdd3e36e328e09364d2563138a3f3d3a19bdc43b0adc6f3b"
+    },
+    {
+      "capability": {
+        "implementation": "qbench.ops.quant_activations.QuantReLU",
+        "kind": "module",
+        "target": "torch.nn.modules.activation.ReLU"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "activation_module_relu.npz",
+      "kernel": "activation",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "activation",
+      "sha256": "9ab4539143b36174cdd3e36e328e09364d2563138a3f3d3a19bdc43b0adc6f3b"
+    },
+    {
+      "capability": {
+        "implementation": "qbench.ops.quant_activations.QuantReLU6",
+        "kind": "module",
+        "target": "torch.nn.modules.activation.ReLU6"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "activation_module_relu6.npz",
+      "kernel": "activation",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "activation",
+      "sha256": "9ab4539143b36174cdd3e36e328e09364d2563138a3f3d3a19bdc43b0adc6f3b"
+    },
+    {
+      "capability": {
+        "implementation": "qbench.ops.quant_activations.QuantGELU",
+        "kind": "module",
+        "target": "torch.nn.modules.activation.GELU"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "activation_module_gelu.npz",
+      "kernel": "activation",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "activation",
+      "sha256": "9ab4539143b36174cdd3e36e328e09364d2563138a3f3d3a19bdc43b0adc6f3b"
+    },
+    {
+      "capability": {
+        "implementation": "qbench.ops.quant_activations.QuantSiLU",
+        "kind": "module",
+        "target": "torch.nn.modules.activation.SiLU"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "activation_module_silu.npz",
+      "kernel": "activation",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "activation",
+      "sha256": "9ab4539143b36174cdd3e36e328e09364d2563138a3f3d3a19bdc43b0adc6f3b"
+    },
+    {
+      "capability": {
+        "implementation": "qbench.ops.quant_activations.QuantHardswish",
+        "kind": "module",
+        "target": "torch.nn.modules.activation.Hardswish"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "activation_module_hardswish.npz",
+      "kernel": "activation",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "activation",
+      "sha256": "9ab4539143b36174cdd3e36e328e09364d2563138a3f3d3a19bdc43b0adc6f3b"
+    },
+    {
+      "capability": {
+        "implementation": "qbench.ops.quant_activations.QuantHardsigmoid",
+        "kind": "module",
+        "target": "torch.nn.modules.activation.Hardsigmoid"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "activation_module_hardsigmoid.npz",
+      "kernel": "activation",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "activation",
+      "sha256": "9ab4539143b36174cdd3e36e328e09364d2563138a3f3d3a19bdc43b0adc6f3b"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::_softmax"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "softmax_last_dim.npz",
+      "kernel": "softmax",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "softmax",
+      "sha256": "85226c2affc9dba555d9fca6577100ceabc1b42705063f157cc204b9021e72ac"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::softmax.int"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "softmax_schema_int.npz",
+      "kernel": "softmax",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "softmax",
+      "sha256": "85226c2affc9dba555d9fca6577100ceabc1b42705063f157cc204b9021e72ac"
+    },
+    {
+      "capability": {
+        "implementation": "qbench.ops.quant_softmax.QuantSoftmax",
+        "kind": "module",
+        "target": "torch.nn.modules.activation.Softmax"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "softmax_module.npz",
+      "kernel": "softmax",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "softmax",
+      "sha256": "85226c2affc9dba555d9fca6577100ceabc1b42705063f157cc204b9021e72ac"
+    },
+    {
+      "capability": {
+        "implementation": "qbench.ops.quant_mha.DecomposedMultiheadAttention",
+        "kind": "module",
+        "target": "torch.nn.modules.activation.MultiheadAttention"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "attention_mha.npz",
+      "kernel": "attention",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "attention",
+      "sha256": "f4273008b349bab6c40dd63420e3faa0f0e2c16766a80e66a9082e9b6c18f2c9"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::scaled_dot_product_attention"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "scaled_dot_product_attention_basic.npz",
+      "kernel": "scaled_dot_product_attention",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "scaled_dot_product_attention",
+      "sha256": "e7415b38306845fb699f7e9748e94adb8e8489f3005ccedc5c0717e74f14c4c8"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::arange"
+      },
+      "comparison": {
+        "kind": "bit_exact"
+      },
+      "file": "index_arange_basic.npz",
+      "kernel": "index_arange",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "index_arange",
+      "sha256": "2900409043b00ae731c188a5859db0b730db796f9a50e5a6e4ad1f05e52e7f01"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::to.dtype"
+      },
+      "comparison": {
+        "kind": "bit_exact"
+      },
+      "file": "index_dtype_cast_basic.npz",
+      "kernel": "index_dtype_cast",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "index_dtype_cast",
+      "sha256": "b22a71295510aebeda887166b1a635e04aa2e6f52af94cfd4e9895968a0b09d9"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::add.Tensor"
+      },
+      "comparison": {
+        "kind": "bit_exact"
+      },
+      "file": "index_arithmetic_add.npz",
+      "kernel": "index_arithmetic",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "index_arithmetic",
+      "sha256": "f18005392da29856169b2a757cbdfa147c712ef0e042028657d490f21ca7e746"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::sub.Tensor"
+      },
+      "comparison": {
+        "kind": "bit_exact"
+      },
+      "file": "index_arithmetic_sub.npz",
+      "kernel": "index_arithmetic",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "index_arithmetic",
+      "sha256": "f18005392da29856169b2a757cbdfa147c712ef0e042028657d490f21ca7e746"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::clamp"
+      },
+      "comparison": {
+        "kind": "bit_exact"
+      },
+      "file": "index_clamp_integer.npz",
+      "kernel": "index_clamp",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "index_clamp",
+      "sha256": "9a1ce35ce6902992e387a9c9dc6c54e68f164b78c6518b6ca54c3e04a28eaf30"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::clamp"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "clamp_float_integer.npz",
+      "kernel": "clamp",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "clamp",
+      "sha256": "9a1ce35ce6902992e387a9c9dc6c54e68f164b78c6518b6ca54c3e04a28eaf30"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::matmul"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "matmul_basic.npz",
+      "kernel": "matmul",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "matmul",
+      "sha256": "efafe14f960aeb6bb8c8cd31bef23bbedde36e6af45de466d16f3b783a815f2f"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::mm"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "matmul_mm.npz",
+      "kernel": "matmul",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "matmul",
+      "sha256": "efafe14f960aeb6bb8c8cd31bef23bbedde36e6af45de466d16f3b783a815f2f"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::bmm"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "matmul_bmm.npz",
+      "kernel": "matmul",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "matmul",
+      "sha256": "7dd64c512a04494e081149921577368c661459798b2e14f5e3dfaac7cf13dd3f"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::add.Tensor"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "arithmetic_add.npz",
+      "kernel": "arithmetic",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "arithmetic",
+      "sha256": "f18005392da29856169b2a757cbdfa147c712ef0e042028657d490f21ca7e746"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::add.Scalar"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "arithmetic_add_scalar.npz",
+      "kernel": "arithmetic",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "arithmetic",
+      "sha256": "f18005392da29856169b2a757cbdfa147c712ef0e042028657d490f21ca7e746"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::sub.Tensor"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "arithmetic_sub.npz",
+      "kernel": "arithmetic",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "arithmetic",
+      "sha256": "f18005392da29856169b2a757cbdfa147c712ef0e042028657d490f21ca7e746"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::mul.Tensor"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "arithmetic_mul.npz",
+      "kernel": "arithmetic",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "arithmetic",
+      "sha256": "f18005392da29856169b2a757cbdfa147c712ef0e042028657d490f21ca7e746"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::mul.Scalar"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "arithmetic_mul_scalar.npz",
+      "kernel": "arithmetic",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "arithmetic",
+      "sha256": "f18005392da29856169b2a757cbdfa147c712ef0e042028657d490f21ca7e746"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::div.Tensor"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "arithmetic_div.npz",
+      "kernel": "arithmetic",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "arithmetic",
+      "sha256": "f18005392da29856169b2a757cbdfa147c712ef0e042028657d490f21ca7e746"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::div.Scalar"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "arithmetic_div_scalar.npz",
+      "kernel": "arithmetic",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "arithmetic",
+      "sha256": "f18005392da29856169b2a757cbdfa147c712ef0e042028657d490f21ca7e746"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::add_.Tensor"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "arithmetic_add_inplace.npz",
+      "kernel": "inplace_add",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "inplace_add",
+      "sha256": "f18005392da29856169b2a757cbdfa147c712ef0e042028657d490f21ca7e746"
+    },
+    {
+      "capability": {
+        "implementation": "qbench.ops.quant_pooling.QuantMaxPool2d",
+        "kind": "module",
+        "target": "torch.nn.modules.pooling.MaxPool2d"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "pooling_max2d.npz",
+      "kernel": "pooling",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "pooling",
+      "sha256": "53f17220ff1e17198db431f2fe7ad50fa5cb2dd19fc8f6d8914a83edf58c4988"
+    },
+    {
+      "capability": {
+        "implementation": "qbench.ops.quant_pooling.QuantAvgPool2d",
+        "kind": "module",
+        "target": "torch.nn.modules.pooling.AvgPool2d"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "pooling_avg2d.npz",
+      "kernel": "pooling",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "pooling",
+      "sha256": "53f17220ff1e17198db431f2fe7ad50fa5cb2dd19fc8f6d8914a83edf58c4988"
+    },
+    {
+      "capability": {
+        "implementation": "qbench.ops.quant_pooling.QuantAdaptiveAvgPool2d",
+        "kind": "module",
+        "target": "torch.nn.modules.pooling.AdaptiveAvgPool2d"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "pooling_adaptive_avg2d.npz",
+      "kernel": "pooling",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "pooling",
+      "sha256": "53f17220ff1e17198db431f2fe7ad50fa5cb2dd19fc8f6d8914a83edf58c4988"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::max_pool2d_with_indices"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "max_pool2d_basic.npz",
+      "kernel": "max_pool2d",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "max_pool2d",
+      "sha256": "53f17220ff1e17198db431f2fe7ad50fa5cb2dd19fc8f6d8914a83edf58c4988"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::avg_pool2d"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "avg_pool2d_basic.npz",
+      "kernel": "avg_pool2d",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "avg_pool2d",
+      "sha256": "53f17220ff1e17198db431f2fe7ad50fa5cb2dd19fc8f6d8914a83edf58c4988"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::adaptive_avg_pool2d"
+      },
+      "comparison": {
+        "atol": 1e-06,
+        "kind": "tolerance",
+        "rtol": 1e-05
+      },
+      "file": "adaptive_avg_pool2d_basic.npz",
+      "kernel": "adaptive_avg_pool2d",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "adaptive_avg_pool2d",
+      "sha256": "53f17220ff1e17198db431f2fe7ad50fa5cb2dd19fc8f6d8914a83edf58c4988"
+    },
+    {
+      "capability": {
+        "kind": "schema",
+        "target": "aten::dropout"
+      },
+      "comparison": {
+        "kind": "bit_exact"
+      },
+      "file": "dropout_eval.npz",
+      "kernel": "dropout",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "dropout",
+      "sha256": "60486f989c450ba7771953bc08786a3fd6a68f5832672eef9884ec2adf561bb5"
+    },
+    {
+      "capability": {
+        "implementation": "qbench.ops.quant_dropout.QuantDropout",
+        "kind": "module",
+        "target": "torch.nn.modules.dropout.Dropout"
+      },
+      "comparison": {
+        "kind": "bit_exact"
+      },
+      "file": "dropout_module.npz",
+      "kernel": "dropout",
+      "quantization_policy": "fp8_e4m3_full_tensor",
+      "runner": "dropout",
+      "sha256": "60486f989c450ba7771953bc08786a3fd6a68f5832672eef9884ec2adf561bb5"
+    }
+  ]
+}

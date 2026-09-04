@@ -1,0 +1,550 @@
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from qbench.registry import OpRegistry
+from qbench.ops.quant_base import QuantizedLayerMixin
+from qbench.ops.quant_arithmetic import _QuantArithmeticBase
+from qbench.ops.quant_softmax import QuantSoftmax
+
+
+def _simple_nms(scores, nms_radius: int):
+    """Fast NMS via max_pool2d (mirrors superpoint.simple_nms)."""
+    assert nms_radius >= 0
+
+    def max_pool(x):
+        return F.max_pool2d(
+            x, kernel_size=nms_radius*2+1, stride=1, padding=nms_radius)
+
+    zeros = torch.zeros_like(scores)
+    max_mask = scores == max_pool(scores)
+    for _ in range(2):
+        supp_mask = max_pool(max_mask.float()) > 0
+        supp_scores = torch.where(supp_mask, zeros, scores)
+        new_max_mask = supp_scores == max_pool(supp_scores)
+        max_mask = max_mask | (new_max_mask & (~supp_mask))
+    return torch.where(max_mask, scores, zeros)
+
+
+def _remove_borders(keypoints, scores, border: int, height: int, width: int):
+    mask_h = (keypoints[:, 0] >= border) & (keypoints[:, 0] < (height - border))
+    mask_w = (keypoints[:, 1] >= border) & (keypoints[:, 1] < (width - border))
+    mask = mask_h & mask_w
+    return keypoints[mask], scores[mask]
+
+
+def _top_k_keypoints(keypoints, scores, k: int):
+    if k >= len(keypoints):
+        return keypoints, scores
+    scores, indices = torch.topk(scores, k, dim=0)
+    return keypoints[indices], scores
+
+
+# ---------------------------------------------------------------------------
+# Passthrough / linear ops — like ReLU, value representation unchanged
+# ---------------------------------------------------------------------------
+
+@OpRegistry.register("ObservedDiscardTrash", quantized=False)
+class ObservedDiscardTrash(nn.Module):
+    """Drop the dustbin (last) score channel (stageB3)."""
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return x[:, :-1]
+
+
+@OpRegistry.register("ObservedReorderReshape", quantized=False)
+class ObservedReorderReshape(nn.Module):
+    """Pixel-shuffle reorder/reshape (stageB4-B7): (B,64,H/8,W/8) -> (B,H,W)."""
+    def forward(self, scores: torch.Tensor) -> torch.Tensor:
+        b, _, h, w = scores.shape
+        scores = scores.permute(0, 2, 3, 1).reshape(b, h, w, 8, 8)
+        return scores.permute(0, 1, 3, 2, 4).reshape(b, h*8, w*8)
+
+
+@OpRegistry.register("ObservedThreshold", compliance_status="FP32 activation", quantized=False)
+class ObservedThreshold(nn.Module):
+    """Threshold score map and extract keypoint coordinates (stageB10-B12)."""
+    def __init__(self, threshold: float = 0.005):
+        super().__init__()
+        self.threshold = threshold
+
+    def forward(self, scores: torch.Tensor):
+        keypoints = [torch.nonzero(s > self.threshold) for s in scores]
+        score_list = [s[tuple(k.t())] for s, k in zip(scores, keypoints)]
+        return keypoints, score_list
+
+
+@OpRegistry.register("ObservedRemoveBorders", replaces="remove_borders",
+                     init_from_args={"border": "border"}, quantized=False)
+class ObservedRemoveBorders(nn.Module):
+    """Remove keypoints too close to image borders (stageB9)."""
+    def __init__(self, border: int = 4):
+        super().__init__()
+        self.border = border
+
+    def forward(self, keypoints, scores, height: int, width: int):
+        return _remove_borders(keypoints, scores, self.border, height, width)
+
+
+@OpRegistry.register("ObservedTopKKeypoints", replaces="top_k_keypoints",
+                     init_from_args={"max_keypoints": "k"}, quantized=False)
+class ObservedTopKKeypoints(nn.Module):
+    """Keep only the top-k highest-scoring keypoints (stageB13)."""
+    def __init__(self, max_keypoints: int = -1):
+        super().__init__()
+        self.max_keypoints = max_keypoints
+
+    def forward(self, keypoints, scores):
+        return _top_k_keypoints(keypoints, scores, self.max_keypoints)
+
+
+@OpRegistry.register("ObservedKeypointFlip", quantized=False)
+class ObservedKeypointFlip(nn.Module):
+    """Convert keypoint coords from (row, col) to (x, y) order (stageB14)."""
+    def forward(self, keypoints):
+        return [torch.flip(k, [1]).float() for k in keypoints]
+
+
+@OpRegistry.register("ObservedL2Norm", compliance_status="FP32 activation", quantized=False)
+class ObservedL2Norm(nn.Module):
+    """L2-normalize the dense descriptor map along the channel dimension (stageC3)."""
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return F.normalize(x, p=2, dim=1)
+
+
+# ---------------------------------------------------------------------------
+# NMS — max-selection like MaxPool, no arithmetic (UNDER CONSTRUCTION)
+# ---------------------------------------------------------------------------
+
+@OpRegistry.register("ObservedSimpleNMS", replaces="simple_nms",
+                     init_from_args={"radius": "nms_radius"}, quantized=True)
+class ObservedSimpleNMS(nn.Module, QuantizedLayerMixin):
+    """NMS via repeated max_pool2d (stageB8). Pure max-selection — values pass through unchanged."""
+    def __init__(self, radius: int = 4, q_type: str = "fp8_e4m3",
+                 quant_mode: str = "tensor", chunk_size: int | None = None):
+        super().__init__()
+        self.radius = radius
+        self.q_type = q_type
+        self.quant_mode = quant_mode
+        self.chunk_size = chunk_size
+        self.capture_activations = False
+
+    def forward(self, scores: torch.Tensor) -> torch.Tensor:
+        scores_q = self.quantize_input(scores)
+        out = _simple_nms(scores_q, self.radius)
+        return self.quantize_output(out)
+
+
+# ---------------------------------------------------------------------------
+# FP32-required ops — floating-point precision critical for correct placement
+# ---------------------------------------------------------------------------
+
+@OpRegistry.register("ObservedCoordOps", compliance_status="FP32 required", quantized=False)
+class ObservedCoordOps(nn.Module):
+    """Shift, normalize, and map keypoint coords to [-1,1] (stageD1-D3)."""
+    def __init__(self, s: int = 8):
+        super().__init__()
+        self.s = s
+
+    def forward(self, keypoints: torch.Tensor, descriptors: torch.Tensor) -> torch.Tensor:
+        _, _, h, w = descriptors.shape
+        s = self.s
+        kp = keypoints - s / 2 + 0.5
+        kp = kp / torch.tensor(
+            [(w*s - s/2 - 0.5), (h*s - s/2 - 0.5)],
+            dtype=kp.dtype, device=kp.device)[None]
+        return kp * 2 - 1
+
+
+@OpRegistry.register("ObservedGridSample", compliance_status="FP32 required", quantized=False)
+class ObservedGridSample(nn.Module):
+    """Bilinear descriptor sampling + per-keypoint L2 norm (stageD4)."""
+    def forward(self, descriptors: torch.Tensor, keypoints_norm: torch.Tensor) -> torch.Tensor:
+        b, c, _, _ = descriptors.shape
+        args = {'align_corners': True} if torch.__version__ >= '1.3' else {}
+        desc = F.grid_sample(
+            descriptors, keypoints_norm.view(b, 1, -1, 2),
+            mode='bilinear', **args)
+        return F.normalize(desc.reshape(b, c, -1), p=2, dim=1)
+
+
+# ===========================================================================
+# SuperGlue ops
+# ===========================================================================
+
+def _log_sinkhorn_iterationsv1(Z, log_mu, log_nu, iters: int):
+    u, v = torch.zeros_like(log_mu), torch.zeros_like(log_nu)
+    for _ in range(iters):
+        u = log_mu - torch.logsumexp(Z + v.unsqueeze(1), dim=2)
+        v = log_nu - torch.logsumexp(Z + u.unsqueeze(2), dim=1)
+    return Z + u.unsqueeze(2) + v.unsqueeze(1)
+
+_LN2 = float(torch.log(torch.tensor(2.0)).item())
+
+
+def _log2sumexp2(x: torch.Tensor, dim: int) -> torch.Tensor:
+    """Numerically-stable log2(sum(2**x)) along ``dim``.
+
+    Mirrors torch.logsumexp but in base 2 — exercises exp2/log2 in place
+    of exp/log, which is hardware-friendlier on FP8 accelerators.
+    """
+    m = x.amax(dim=dim, keepdim=True)
+    return (m + torch.log2(torch.exp2(x - m).sum(dim=dim, keepdim=True))).squeeze(dim)
+
+
+def _log_sinkhorn_iterationsv2(Z, log_mu, log_nu, iters: int):
+    """log2/exp2 variant — same algorithm as v1, but the inner logsumexp
+    runs in base 2 (exp2/log2). Inputs and outputs stay in natural-log
+    space so the caller's ``Z - norm`` math is unchanged."""
+    Z2 = Z / _LN2
+    log_mu_2 = log_mu / _LN2
+    log_nu_2 = log_nu / _LN2
+    u = torch.zeros_like(log_mu_2)
+    v = torch.zeros_like(log_nu_2)
+    for _ in range(iters):
+        u = log_mu_2 - _log2sumexp2(Z2 + v.unsqueeze(1), dim=2)
+        v = log_nu_2 - _log2sumexp2(Z2 + u.unsqueeze(2), dim=1)
+    Z2_out = Z2 + u.unsqueeze(2) + v.unsqueeze(1)
+    return Z2_out * _LN2
+
+
+def _log_sinkhorn_iterationsv3(Z, log_mu, log_nu, iters: int):
+    """Max (log-MAP / Viterbi-style) variant — replaces logsumexp with
+    a hard max. Cheapest option, no exp/log in the inner loop. Matches
+    the saturating arg-max semantics of low-bit logsumexp approximations."""
+    u = torch.zeros_like(log_mu)
+    v = torch.zeros_like(log_nu)
+    for _ in range(iters):
+        u = log_mu - (Z + v.unsqueeze(1)).amax(dim=2)
+        v = log_nu - (Z + u.unsqueeze(2)).amax(dim=1)
+    return Z + u.unsqueeze(2) + v.unsqueeze(1)
+
+
+def _log_sinkhorn_iterationsv4(Z, log_mu, log_nu, iters: int):
+    """Sum (linear-space) variant — exponentiate up front, run plain
+    multiplicative Sinkhorn with a sum normalizer (no logsumexp inside
+    the loop), and convert back to log-space at the end."""
+    K = torch.exp(Z)
+    mu = torch.exp(log_mu)
+    nu = torch.exp(log_nu)
+    eps = K.new_tensor(1e-30)
+    u = torch.ones_like(mu)
+    v = torch.ones_like(nu)
+    for _ in range(iters):
+        u = mu / (K * v.unsqueeze(1)).sum(dim=2).clamp(min=eps)
+        v = nu / (K * u.unsqueeze(2)).sum(dim=1).clamp(min=eps)
+    return torch.log((K * u.unsqueeze(2) * v.unsqueeze(1)).clamp(min=eps))
+
+
+def _arange_like(x, dim: int):
+    return x.new_ones(x.shape[dim]).cumsum(0) - 1
+
+
+# --- Linear / passthrough ops -------------------------------------------------
+
+@OpRegistry.register("ObservedKeypointNormalize", replaces="normalize_keypoints",
+                     compliance_status="FP32 activation", quantized=False)
+class ObservedKeypointNormalize(nn.Module):
+    """Center + scale keypoint coordinates relative to image dimensions."""
+    def forward(self, kpts: torch.Tensor, image_shape) -> torch.Tensor:
+        _, _, height, width = image_shape
+        one = kpts.new_tensor(1)
+        size = torch.stack([one*width, one*height])[None]
+        center = size / 2
+        scaling = size.max(1, keepdim=True).values * 0.7
+        return (kpts - center[:, None, :]) / scaling[:, None, :]
+
+
+@OpRegistry.register("ObservedConcat", is_activation=False)
+class ObservedConcat(_QuantArithmeticBase):
+    """torch.cat wrapped as a module; quantizes each operand (mirrors QuantCat)."""
+    def __init__(self, dim: int = 1, q_type="fp8_e4m3", quantization_bias: int = None, quant_mode="chunk", chunk_size=None):
+        super().__init__()
+        self.dim = dim
+        self.q_type = q_type
+        self.quantization_bias = quantization_bias
+        self.quant_mode = quant_mode
+        self.chunk_size = chunk_size
+        self.input_quantization = False
+
+    def forward(self, *tensors):
+        if len(tensors) == 1 and isinstance(tensors[0], (list, tuple)):
+            tensors = tensors[0]
+        quantized = self._quantize_operands(tensors)
+        return torch.cat(quantized, dim=self.dim)
+
+
+@OpRegistry.register("ObservedAdd", is_activation=False)
+class ObservedAdd(_QuantArithmeticBase):
+    """Element-wise add (residual connections); quantizes each operand (mirrors QuantAdd)."""
+    def __init__(self, q_type="fp8_e4m3", quantization_bias: int = None, quant_mode="chunk", chunk_size=None):
+        super().__init__()
+        self.q_type = q_type
+        self.quantization_bias = quantization_bias
+        self.quant_mode = quant_mode
+        self.chunk_size = chunk_size
+        self.input_quantization = False
+
+    def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        q1, q2 = self._quantize_operands([x, y])
+        return torch.add(q1, q2)
+
+
+# --- Attention matmul / similarity ops --------------------------------------
+
+@OpRegistry.register("ObservedAttentionScores", is_activation=False)
+class ObservedAttentionScores(_QuantArithmeticBase):
+    """Q·K^T scaled-dot-product (multi-head einsum + √d post-scale).
+
+    Quantizes both operands to FP8 before the einsum, mirroring QuantMatMul.
+    """
+    def __init__(self, q_type="fp8_e4m3", quantization_bias: int = None, quant_mode="chunk", chunk_size=None):
+        super().__init__()
+        self.q_type = q_type
+        self.quantization_bias = quantization_bias
+        self.quant_mode = quant_mode
+        self.chunk_size = chunk_size
+        self.input_quantization = False
+
+    def forward(self, query: torch.Tensor, key: torch.Tensor) -> torch.Tensor:
+        q, k = self._quantize_operands([query, key])
+        dim = q.shape[1]
+        return torch.einsum('bdhn,bdhm->bhnm', q, k) / dim**0.5
+
+
+@OpRegistry.register("ObservedAttentionApply", is_activation=False)
+class ObservedAttentionApply(_QuantArithmeticBase):
+    """Score·V einsum (multi-head).
+
+    Quantizes both operands to FP8 before the einsum, mirroring QuantMatMul.
+    """
+    def __init__(self, q_type="fp8_e4m3", quantization_bias: int = None, quant_mode="chunk", chunk_size=None):
+        super().__init__()
+        self.q_type = q_type
+        self.quantization_bias = quantization_bias
+        self.quant_mode = quant_mode
+        self.chunk_size = chunk_size
+        self.input_quantization = False
+
+    def forward(self, prob: torch.Tensor, value: torch.Tensor) -> torch.Tensor:
+        p, v = self._quantize_operands([prob, value])
+        return torch.einsum('bhnm,bdhm->bdhn', p, v)
+
+
+@OpRegistry.register("ObservedDescMatmul", is_activation=False)
+class ObservedDescMatmul(_QuantArithmeticBase):
+    """Descriptor similarity einsum (desc0 · desc1ᵀ / √d).
+
+    Quantizes both operands to FP8 before the einsum, mirroring QuantMatMul.
+    """
+    def __init__(self, descriptor_dim: int, q_type="fp8_e4m3", quantization_bias: int = None, quant_mode="chunk", chunk_size=None):
+        super().__init__()
+        self.scale = descriptor_dim ** 0.5
+        self.q_type = q_type
+        self.quantization_bias = quantization_bias
+        self.quant_mode = quant_mode
+        self.chunk_size = chunk_size
+        self.input_quantization = False
+
+    def forward(self, mdesc0: torch.Tensor, mdesc1: torch.Tensor) -> torch.Tensor:
+        q0, q1 = self._quantize_operands([mdesc0, mdesc1])
+        return torch.einsum('bdn,bdm->bnm', q0, q1) / self.scale
+
+
+# --- FP32-required op --------------------------------------------------------
+
+@OpRegistry.register("ObservedSinkhornV1", replaces="log_optimal_transport",
+                     variant="v1", default=True,
+                     init_from_args={"iters": "iters"}, compliance_status="FP32 required",
+                     quantized=True)  # quantized=True to prevent FP8 quantization of the output, which causes NaNs
+class ObservedSinkhornV1(nn.Module):
+    """Differentiable optimal transport via Sinkhorn in log-space.
+
+    Iterative logsumexp — needs FP32 precision. Baseline variant.
+    """
+    def __init__(self, iters: int = 100):
+        super().__init__()
+        self.iters = iters
+
+    def forward(self, scores: torch.Tensor, alpha: torch.Tensor) -> torch.Tensor:
+        b, m, n = scores.shape
+        one = scores.new_tensor(1)
+        ms, ns = (m*one).to(scores), (n*one).to(scores)
+
+        bins0 = alpha.expand(b, m, 1)
+        bins1 = alpha.expand(b, 1, n)
+        alpha_e = alpha.expand(b, 1, 1)
+
+        couplings = torch.cat([torch.cat([scores, bins0], -1),
+                               torch.cat([bins1, alpha_e], -1)], 1)
+
+        norm = -(ms + ns).log()
+        log_mu = torch.cat([norm.expand(m), ns.log()[None] + norm])
+        log_nu = torch.cat([norm.expand(n), ms.log()[None] + norm])
+        log_mu, log_nu = log_mu[None].expand(b, -1), log_nu[None].expand(b, -1)
+
+        Z = _log_sinkhorn_iterationsv1(couplings, log_mu, log_nu, self.iters)
+        return Z - norm
+
+
+@OpRegistry.register("ObservedSinkhornV2", replaces="log_optimal_transport",
+                     variant="v2",
+                     init_from_args={"iters": "iters"}, compliance_status="FP32 required",
+                     quantized=True)
+class ObservedSinkhornV2(nn.Module):
+    """Differentiable optimal transport via Sinkhorn in log-space.
+
+    Iterative logsumexp — needs FP32 precision. Baseline variant.
+    """
+    def __init__(self, iters: int = 100):
+        super().__init__()
+        self.iters = iters
+
+    def forward(self, scores: torch.Tensor, alpha: torch.Tensor) -> torch.Tensor:
+        b, m, n = scores.shape
+        one = scores.new_tensor(1)
+        ms, ns = (m*one).to(scores), (n*one).to(scores)
+
+        bins0 = alpha.expand(b, m, 1)
+        bins1 = alpha.expand(b, 1, n)
+        alpha_e = alpha.expand(b, 1, 1)
+
+        couplings = torch.cat([torch.cat([scores, bins0], -1),
+                               torch.cat([bins1, alpha_e], -1)], 1)
+
+        norm = -(ms + ns).log()
+        log_mu = torch.cat([norm.expand(m), ns.log()[None] + norm])
+        log_nu = torch.cat([norm.expand(n), ms.log()[None] + norm])
+        log_mu, log_nu = log_mu[None].expand(b, -1), log_nu[None].expand(b, -1)
+
+        Z = _log_sinkhorn_iterationsv2(couplings, log_mu, log_nu, self.iters)
+        return Z - norm
+
+@OpRegistry.register("ObservedSinkhornV3", replaces="log_optimal_transport",
+                     variant="v3",
+                     init_from_args={"iters": "iters"}, compliance_status="FP32 required",
+                     quantized=True)
+class ObservedSinkhornV3(nn.Module):
+    """Differentiable optimal transport via Sinkhorn in log-space.
+
+    Iterative logsumexp — needs FP32 precision. Baseline variant.
+    """
+    def __init__(self, iters: int = 100):
+        super().__init__()
+        self.iters = iters
+
+    def forward(self, scores: torch.Tensor, alpha: torch.Tensor) -> torch.Tensor:
+        b, m, n = scores.shape
+        one = scores.new_tensor(1)
+        ms, ns = (m*one).to(scores), (n*one).to(scores)
+
+        bins0 = alpha.expand(b, m, 1)
+        bins1 = alpha.expand(b, 1, n)
+        alpha_e = alpha.expand(b, 1, 1)
+
+        couplings = torch.cat([torch.cat([scores, bins0], -1),
+                               torch.cat([bins1, alpha_e], -1)], 1)
+
+        norm = -(ms + ns).log()
+        log_mu = torch.cat([norm.expand(m), ns.log()[None] + norm])
+        log_nu = torch.cat([norm.expand(n), ms.log()[None] + norm])
+        log_mu, log_nu = log_mu[None].expand(b, -1), log_nu[None].expand(b, -1)
+
+        Z = _log_sinkhorn_iterationsv3(couplings, log_mu, log_nu, self.iters)
+        return Z - norm
+
+@OpRegistry.register("ObservedSinkhornV4", replaces="log_optimal_transport",
+                     variant="v4",
+                     init_from_args={"iters": "iters"}, compliance_status="FP32 required",
+                     quantized=True)
+class ObservedSinkhornV4(nn.Module):
+    """Differentiable optimal transport via Sinkhorn in log-space.
+
+    Iterative logsumexp — needs FP32 precision. Baseline variant.
+    """
+    def __init__(self, iters: int = 100):
+        super().__init__()
+        self.iters = iters
+
+    def forward(self, scores: torch.Tensor, alpha: torch.Tensor) -> torch.Tensor:
+        b, m, n = scores.shape
+        one = scores.new_tensor(1)
+        ms, ns = (m*one).to(scores), (n*one).to(scores)
+
+        bins0 = alpha.expand(b, m, 1)
+        bins1 = alpha.expand(b, 1, n)
+        alpha_e = alpha.expand(b, 1, 1)
+
+        couplings = torch.cat([torch.cat([scores, bins0], -1),
+                               torch.cat([bins1, alpha_e], -1)], 1)
+
+        norm = -(ms + ns).log()
+        log_mu = torch.cat([norm.expand(m), ns.log()[None] + norm])
+        log_nu = torch.cat([norm.expand(n), ms.log()[None] + norm])
+        log_mu, log_nu = log_mu[None].expand(b, -1), log_nu[None].expand(b, -1)
+
+        Z = _log_sinkhorn_iterationsv4(couplings, log_mu, log_nu, self.iters)
+        return Z - norm
+# --- Match selection --------------------------------------------------------
+
+@OpRegistry.register("ObservedMatchSelect", compliance_status="FP32 activation", quantized=False)
+class ObservedMatchSelect(nn.Module):
+    """Mutual-nearest-neighbor match selection with score threshold."""
+    def __init__(self, match_threshold: float = 0.2):
+        super().__init__()
+        self.match_threshold = match_threshold
+
+    def forward(self, scores: torch.Tensor):
+        max0 = scores[:, :-1, :-1].max(2)
+        max1 = scores[:, :-1, :-1].max(1)
+        indices0, indices1 = max0.indices, max1.indices
+        mutual0 = _arange_like(indices0, 1)[None] == indices1.gather(1, indices0)
+        mutual1 = _arange_like(indices1, 1)[None] == indices0.gather(1, indices1)
+        zero = scores.new_tensor(0)
+        mscores0 = torch.where(mutual0, max0.values.exp(), zero)
+        mscores1 = torch.where(mutual1, mscores0.gather(1, indices1), zero)
+        valid0 = mutual0 & (mscores0 > self.match_threshold)
+        valid1 = mutual1 & valid0.gather(1, indices1)
+        indices0 = torch.where(valid0, indices0, indices0.new_tensor(-1))
+        indices1 = torch.where(valid1, indices1, indices1.new_tensor(-1))
+        return indices0, indices1, mscores0, mscores1
+
+
+# ===========================================================================
+# Composed @observer replacements
+# These bundle multiple primitives so a single class binds 1:1 to an upstream
+# @observer function via `replaces=`.
+# ===========================================================================
+
+
+@OpRegistry.register("ObservedAttention", replaces="attention", is_activation=False)
+class ObservedAttention(nn.Module):
+    """Attention(query, key, value) → (output, prob).
+
+    Wraps Q·Kᵀ/√d (FP8), softmax, and Score·V (FP8).
+    """
+    def __init__(self, q_type="fp8_e4m3", quantization_bias: int = None,
+                 quant_mode="chunk", chunk_size=None):
+        super().__init__()
+        kw = dict(q_type=q_type, quantization_bias=quantization_bias,
+                  quant_mode=quant_mode, chunk_size=chunk_size)
+        self.attn_scores = ObservedAttentionScores(**kw)
+        self.attn_apply = ObservedAttentionApply(**kw)
+        self.softmax = QuantSoftmax(dim=-1, q_type=q_type,
+                                    quant_mode=quant_mode, chunk_size=chunk_size)
+
+    def forward(self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor):
+        s = self.attn_scores(query, key)
+        p = self.softmax(s)
+        return self.attn_apply(p, value), p
+
+
+@OpRegistry.register("ObservedSampleDescriptors", replaces="sample_descriptors",
+                     init_from_args={"s": "s"}, compliance_status="FP32 required")
+class ObservedSampleDescriptors(nn.Module):
+    """sample_descriptors(keypoints, descriptors, s) → bilinear-sampled, L2-normed descriptors."""
+    def __init__(self, s: int = 8):
+        super().__init__()
+        self.coord = ObservedCoordOps(s)
+        self.grid = ObservedGridSample()
+
+    def forward(self, keypoints: torch.Tensor, descriptors: torch.Tensor) -> torch.Tensor:
+        return self.grid(descriptors, self.coord(keypoints, descriptors))

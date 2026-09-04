@@ -1,0 +1,8 @@
+{
+  "device": "cpu",
+  "quantization_enabled": false,
+  "allow_fp32_fallback": false,
+  "verify": true,
+  "enable_fx": true,
+  "enable_export": true
+}

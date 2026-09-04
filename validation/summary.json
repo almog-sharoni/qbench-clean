@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-04",
+  "status": "passed_with_declared_limits",
+  "source": {
+    "repository": "almog-sharoni/QBench-Release",
+    "parent_commit": "08b42206f899c8e4e1e5091b332118f7f0ccb21d",
+    "included_uncommitted_implementation": true,
+    "modified_by_extraction": false,
+    "baseline_tests": {
+      "passed": 249,
+      "skipped": 1
+    }
+  },
+  "tests": {
+    "cpu_installed_wheel": {
+      "tests": 263,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 7,
+      "passed": 256,
+      "seconds": 33.183
+    },
+    "cuda_source": {
+      "tests": 263,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 1,
+      "passed": 262,
+      "seconds": 37.868
+    }
+  },
+  "environments": {
+    "cpu": {
+      "python": "3.12",
+      "torch": "2.14.0+cpu",
+      "torchvision": "0.29.0+cpu",
+      "timm": "1.0.29",
+      "streamlit": "1.63.0",
+      "cuda_runtime": null
+    },
+    "cuda": {
+      "python": "3.12.3",
+      "torch": "2.9.0a0+50eac811a6.nv25.09",
+      "torchvision": "0.24.0a0+98f8b375",
+      "timm": "1.0.26",
+      "streamlit": "1.55.0",
+      "cuda_runtime": "13.0",
+      "gpu": "NVIDIA H100 NVL"
+    }
+  },
+  "distribution": {
+    "wheel_build": "passed",
+    "wheel_sha256": "ce849140d10ec4883e4b8ea1aa9a930fbe1beb2d12d94203fe1ea3b09f33d4bc",
+    "installed_outside_checkout": true,
+    "legacy_tree_imports": false,
+    "lazy_cpu_import": "passed",
+    "dashboard_apptest": "passed",
+    "cli_exit_codes": [
+      0,
+      2,
+      1
+    ],
+    "fast_metric_forwards_per_batch": 2
+  },
+  "conformance": {
+    "simulator_passed": 55,
+    "simulator_failed": 0,
+    "simulator_status": "passed",
+    "hardware_fidelity": "missing_evidence",
+    "cli_exit_code": 2
+  },
+  "extraction_comparison": {
+    "cases": 6,
+    "all_unchanged": true,
+    "strict_supported_cases": 5,
+    "unchanged_partial_case": "mobilevit_s-224",
+    "pretrained": false,
+    "details": "extraction-comparison.json"
+  },
+  "docs": {
+    "mkdocs": "1.6.1",
+    "material": "9.7.7",
+    "strict_build": "passed",
+    "html_pages": 18,
+    "local_links_and_anchors": 964,
+    "link_check": "passed"
+  },
+  "fixes": [
+    "Package-owned ImageNet label resource replaces legacy test-tree lookup.",
+    "Deferred CUDA final-output metrics snapshot reusable output buffers.",
+    "Export-specific timm integration test explicitly requests export fallback."
+  ],
+  "publication": {
+    "git_history": "independent",
+    "remote_created": false,
+    "pages_workflow": "prepared",
+    "pages_deployed": false,
+    "awaiting": "User repository/visibility confirmation"
+  },
+  "outstanding": [
+    "Full pretrained six-case ImageNet support/accuracy diff against a true pre-refactor baseline.",
+    "Target-GPU fast-metric overhead remeasurement after final-output snapshot fix.",
+    "Independent hardware fidelity evidence.",
+    "Fresh container rebuild and broader Python/PyTorch version matrix."
+  ]
+}
