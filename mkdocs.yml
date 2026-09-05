@@ -1,4 +1,7 @@
 site_name: QBench
+site_url: https://almog-sharoni.github.io/qbench-clean/
+repo_url: https://github.com/almog-sharoni/qbench-clean
+repo_name: almog-sharoni/qbench-clean
 site_description: Runtime-first model inspection and verified quantized simulation for PyTorch
 strict: true
 theme:

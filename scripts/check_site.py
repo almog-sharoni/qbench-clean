@@ -10,9 +10,12 @@ class Links(HTMLParser):
         super().__init__()
         self.links = []
         self.ids = set()
+        self.canonical = None
 
     def handle_starttag(self, tag, attributes):
         attrs = dict(attributes)
+        if tag == "link" and attrs.get("rel") == "canonical":
+            self.canonical = attrs.get("href")
         if "id" in attrs:
             self.ids.add(attrs["id"])
         if tag == "a" and "name" in attrs:
@@ -32,6 +35,12 @@ def check(directory):
         pages[path] = parsed
     if not pages:
         raise SystemExit("No built HTML pages found")
+    # MkDocs uses root-relative URLs in 404.html when site_url contains a
+    # project prefix. Resolve those against the published site, not site/site/.
+    index = pages.get(root / "index.html")
+    canonical = index.canonical if index else None
+    base_path = unquote(urlsplit(canonical).path) if canonical else "/"
+    base_path = "/" + base_path.strip("/") + "/" if base_path.strip("/") else "/"
     failures = []
     checked = 0
     for path, page in pages.items():
@@ -41,7 +50,10 @@ def check(directory):
                 continue
             target = unquote(url.path)
             if target.startswith("/"):
-                target_path = root / target.lstrip("/")
+                if not target.startswith(base_path):
+                    failures.append(f"{path.relative_to(root)}: outside site prefix {link}")
+                    continue
+                target_path = root / target[len(base_path):]
             elif target:
                 target_path = path.parent / target
             else:
