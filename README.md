@@ -70,8 +70,9 @@ Start with the [quickstart](docs/quickstart.md), [dashboard guide](docs/dashboar
 The [multi-user platform guide](docs/platform.md) covers administration, per-user
 features, dataset allowlists, account recovery, and secure single-host deployment.
 For the legacy trusted local workbench, use `qbench-dashboard --single-user`.
-The Pages workflow builds this site and deploys it when Pages is configured for
-GitHub Actions. See [deployment](docs/deployment.md).
+The Pages workflow always builds and validates this site. Publication requires
+Pages configured for GitHub Actions and repository variable `QBENCH_PAGES_ENABLED=true`.
+See [deployment](docs/deployment.md), including private-repository visibility cautions.
 
 ## Scope and provenance
 

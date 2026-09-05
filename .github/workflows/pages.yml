@@ -20,7 +20,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pages: read
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -31,14 +30,15 @@ jobs:
       - run: python -m pip install -r docs/requirements.txt
       - run: mkdocs build --strict
       - run: python scripts/check_site.py
-      - uses: actions/configure-pages@v5
-        if: github.event_name != 'pull_request'
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v5
         if: github.event_name != 'pull_request'
         with:
           path: site
+      - name: Publication is disabled
+        if: github.event_name != 'pull_request' && vars.QBENCH_PAGES_ENABLED != 'true'
+        run: echo '::notice::Documentation validated and uploaded. Publication is disabled; see docs/deployment.md to enable Pages explicitly.'
   deploy:
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.QBENCH_PAGES_ENABLED == 'true'
     needs: build
     runs-on: ubuntu-latest
     permissions:
@@ -48,5 +48,8 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/deploy-pages@v4
+      - uses: actions/configure-pages@v6
+        with:
+          enablement: false
+      - uses: actions/deploy-pages@v5
         id: deployment

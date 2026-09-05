@@ -60,6 +60,10 @@ failure as a passed quantization or hardware-fidelity check.
 
 ## Docs show a missing Pages site
 
-The repository must exist remotely, Pages must use GitHub Actions, and a successful
-deployment is required. A local `mkdocs build` only verifies static output.
+An HTTP 404 from `configure-pages` means the site is not enabled or is unavailable
+to the workflow token. Documentation builds no longer require a Pages site. For
+publication, Pages must use GitHub Actions and `QBENCH_PAGES_ENABLED` must be `true`.
+Check private-repository plan eligibility and intended website visibility before
+enabling it. Do not auto-enable public hosting just to make a build pass.
+A local `mkdocs build` or a skipped deployment only verifies static output.
 See [deployment](deployment.md).
